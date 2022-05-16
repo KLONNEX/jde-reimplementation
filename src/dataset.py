@@ -201,7 +201,7 @@ class JointDataset:
             max_index = -1
             for lp in label_paths:
                 lb = np.loadtxt(lp)
-                if lb.shape[0] < 1:
+                if lb.size < 1:
                     continue
                 if lb.ndim < 2:
                     img_max = lb[1]
@@ -223,7 +223,9 @@ class JointDataset:
         self.width = img_size[0]
         self.height = img_size[1]
         self.augment = augment
-        self.img_scale = config.img_scale
+        self.img_scale = 1. / config.img_scale
+        self.mean = np.array(config.img_mean).reshape((3, 1, 1))
+        self.std = np.array(config.img_std).reshape((3, 1, 1))
 
         print('=' * 40)
         print('dataset summary')
@@ -278,7 +280,7 @@ class JointDataset:
             labels[:, 4] = ratio * w * (labels0[:, 2] + labels0[:, 4] / 2) + padw
             labels[:, 5] = ratio * h * (labels0[:, 3] + labels0[:, 5] / 2) + padh
         else:
-            labels = np.array([])
+            labels = np.array([0, -1, 0, 0, 0, 0])
 
         # Augment image and labels
         if self.augment:
@@ -292,6 +294,7 @@ class JointDataset:
             labels[:, 3] /= height
             labels[:, 4] /= width
             labels[:, 5] /= height
+
         if self.augment:
             # random left-right flip
             lr_flip = True
@@ -302,7 +305,7 @@ class JointDataset:
 
         img = np.ascontiguousarray(img[:, :, ::-1])  # BGR to RGB
 
-        img = img.transpose(2, 0, 1) / self.img_scale
+        img = (self.img_scale * img.transpose((2, 0, 1)) - self.mean) / self.std
 
         return img, labels, img_path
 
@@ -321,6 +324,12 @@ class JointDataset:
         for i, _ in enumerate(labels):
             if labels[i, 1] > -1:
                 labels[i, 1] += self.tid_start_index[ds]
+
+        # If image without pedestrians detections
+        # We dont drop that image, but learn network to
+        # Make less true negatives predictions
+        if labels.size == 0:
+            labels = np.array([[0, -1, 0, 0, 0, 0]])
 
         # Calculate confidence mask, bbox delta and ids for every map size
         small, medium, big = build_thresholds(

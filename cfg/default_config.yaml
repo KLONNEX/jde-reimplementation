@@ -7,12 +7,14 @@ learning_rate: 0.00125  # 1 device training
 epochs: 30
 batch_size: 4
 warmup_steps: 8000
-accumulate_batches: 8
+accumulate_batches: 1
 
 # other
 num_classes: 1
 img_size: [1088, 608]
 img_scale: 255
+img_mean: [0.485, 0.456, 0.406]
+img_std: [0.229, 0.224, 0.225]
 track_buffer: 30
 log_step: 100
 
@@ -47,8 +49,7 @@ anchor_scales: [
 
 # other
 is_distributed: False
-dataset_root: '/root/path/to/dataset/'
-device_target: 'GPU'
+dataset_root: '/4TB/perminov/datasets/JDE'
 device_id: 0
 device_start: 0
 ckpt_url: '/path/to/checkpoint'
@@ -86,7 +87,6 @@ min_box_area: 'Filter out tiny boxes.'
 anchor_scales: '12 predefined anchor boxes. Different 4 per each of 3 feature maps.'
 is_distributed: 'Distribute training or not.'
 dataset_root: 'Path to datasets root folder.'
-device_target: 'Device GPU or any.'
 device_id: 'Device id of target device.'
 device_start: 'Start device id.'
 ckpt_url: 'Location of checkpoint.'

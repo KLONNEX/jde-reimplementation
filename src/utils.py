@@ -98,8 +98,8 @@ def build_targets_thres(target, anchor_wh, na, ngh, ngw):
 
     # Compute anchor iou with ground truths bboxes
     iou_pdist = bbox_iou(anchor_list, gt_boxes)  # Shape (na x ngh x ngw, Ng)
-    max_gt_index = iou_pdist.argmax(axis=1)   # Shape (na x ngh x ngw)
-    iou_max = iou_pdist.max(axis=1)   # Shape (na x ngh x ngw)
+    max_gt_index = iou_pdist.argmax(axis=1)  # Shape (na x ngh x ngw)
+    iou_max = iou_pdist.max(axis=1)  # Shape (na x ngh x ngw)
 
     iou_map = iou_max.reshape(na, ngh, ngw)
     gt_index_map = max_gt_index.reshape(na, ngh, ngw)

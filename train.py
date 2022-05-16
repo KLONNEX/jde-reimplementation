@@ -17,8 +17,15 @@ from src.model import YOLOv3
 from src.utils import collate_fn
 from src.utils import load_darknet_weights
 
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+
+def worker_init_fn(worker_id):
+    """
+    Initialize worker seed.
+
+    Args:
+        worker_id: Id of the current cpu worker.
+    """
+    np.random.seed(np.random.get_state()[1][0] + worker_id)
 
 
 def init_train_model(cfg, nid):
@@ -88,6 +95,8 @@ def main():
         batch_size=config.batch_size,
         shuffle=True,
         drop_last=True,
+        num_workers=8,
+        worker_init_fn=worker_init_fn,
     )
 
     model, params = init_train_model(config, dataset.nid)
@@ -115,7 +124,6 @@ def main():
                 optimizer.step()
                 optimizer.zero_grad()
 
-            print(loss)
             if step % config.log_step == 0 and step != 0:
                 logger = f'epoch {epoch}/{config.epochs} ' \
                          f'step {step}/{len(dataloader)} ' \
@@ -130,14 +138,12 @@ def main():
         logger = f'{epoch} epoch time {(time.time() - epoch_start) // 60} minutes'
         print(logger)
 
-        if epoch % config.save_every == 0 or epoch == config.epochs:
-            checkpoint_name = str(Path(config.logs_dir, f'JDE-{epoch}.pt'))
-            checkpoint = {
-                'model': model.module.state_dict(),
-                'optimizer': optimizer.state_dict(),
-            }
+        checkpoint_name = str(Path(config.logs_dir, f'JDE-{epoch}.pt'))
+        checkpoint = {
+            'model': model.state_dict(),
+        }
 
-            torch.save(checkpoint, checkpoint_name)
+        torch.save(checkpoint, checkpoint_name)
 
         scheduler.step()
 
