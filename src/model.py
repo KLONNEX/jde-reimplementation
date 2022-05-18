@@ -1,13 +1,18 @@
 """YOLOv3 based on DarkNet."""
 import math
+import os
+from pathlib import Path
 
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
 
 from cfg.config import config as default_config
-from src.modules import _conv_bn_leaky
 from src.modules import YoloBlock
+from src.modules import _conv_bn_leaky
+from src.utils import create_anchors_vec
+from src.utils import decode_delta
 
 
 class YOLOv3(nn.Module):
@@ -64,7 +69,8 @@ class YOLOv3(nn.Module):
         """Freeze batch norms."""
         for module in self.modules():
             if isinstance(module, nn.BatchNorm2d):
-                module.requires_grad = False
+                module.weight.requires_grad = False
+                module.bias.requires_grad = False
 
     def forward(self, inp):
         """
@@ -265,3 +271,164 @@ class JDE(nn.Module):
         loss = (out_s + out_m + out_b) / 3
 
         return loss
+
+
+class YOLOLayerEval(nn.Module):
+    """
+    Head for detection and tracking.
+
+    Args:
+        anchor (list): Absolute sizes of anchors (w, h).
+        nc (int): Number of ground truth classes.
+
+    Returns:
+        prediction: Model predictions for confidences, boxes and embeddings.
+    """
+
+    def __init__(
+            self,
+            anchor,
+            stride,
+            nc=default_config.num_classes,
+    ):
+        super().__init__()
+        self.na = len(anchor)  # number of anchors (4)
+        self.nc = nc  # number of classes (1)
+        self.anchor_vec = torch.FloatTensor(anchor).cuda()
+        self.stride = stride
+
+    def forward(self, p_cat):
+        """
+        Feed forward output from the FPN,
+        calculate prediction corresponding to anchor.
+        """
+        p, p_emb = p_cat[:, :24, ...], p_cat[:, 24:, ...]
+        nb, ngh, ngw = p.shape[0], p.shape[-2], p.shape[-1]
+
+        p = p.view(nb, self.na, self.nc + 5, ngh, ngw).permute(0, 1, 3, 4, 2)  # prediction
+        p_emb = p_emb.permute(0, 2, 3, 1)
+        p_box = p[..., :4]
+        p_conf = p[..., 4:6].permute(0, 4, 1, 2, 3)  # conf
+        p_conf = torch.softmax(p_conf, dim=1)[:, 1, ...].unsqueeze(-1)
+        p_emb = F.normalize(p_emb.unsqueeze(1).repeat(1, self.na, 1, 1, 1), dim=-1)
+
+        p_cls = torch.zeros((nb, self.na, ngh, ngw, 1)).cuda()  # temp
+        p = torch.cat((p_box, p_conf, p_cls, p_emb), dim=-1)
+
+        # Decode bbox delta to the absolute cords
+        p_1 = decode_delta(p[..., :4], self.anchor_vec)
+        p_1 = p_1 * self.stride
+
+        p = torch.cat((p_1, p[..., 4:]), dim=-1)
+        prediction = p.reshape(nb, -1, p.shape[-1])
+
+        return prediction
+
+
+class JDEeval(nn.Module):
+    """
+     JDE Network.
+
+     Note:
+         backbone = YOLOv3 with darknet53.
+         head = 3 similar heads for each feature map size.
+
+     Returns:
+         output: Tensor with concatenated outputs from each head.
+         output_top_k: Output tensor of top_k best proposals by confidence.
+    """
+
+    def __init__(self, extractor, config):
+        super().__init__()
+        anchors, strides = create_anchors_vec(config.anchor_scales)
+
+        self.backbone = extractor
+
+        self.head_s = YOLOLayerEval(anchors[0], strides[0])
+        self.head_m = YOLOLayerEval(anchors[1], strides[1])
+        self.head_b = YOLOLayerEval(anchors[2], strides[2])
+
+        # Top K to cut extra predictions to save time
+        # of .cpu() transfer from .cuda() device
+        self.k = 800
+
+    def forward(self, images):
+        """
+        Feed forward image to FPN, get 3 feature maps with different sizes,
+        put them into 3 heads, corresponding to size,
+        get concatenated output of proposals.
+        """
+        small, medium, big = self.backbone(images)
+
+        out_s = self.head_s(small)
+        out_m = self.head_m(medium)
+        out_b = self.head_b(big)
+
+        output = torch.cat((out_s, out_m, out_b), dim=1)
+
+        _, top_k_indices = torch.topk(output[:, :, 4], self.k, sorted=False)
+        output_top_k = output[0][top_k_indices]
+
+        return output, output_top_k
+
+
+def load_darknet_weights(model, weights):
+    """
+    Load backbone weights into model from existing file
+    or download and load if not exist.
+
+    Args:
+        model: Inited train model with backbone.
+        weights (str): Path to backbone weights file.
+    """
+    # Parses and loads the weights stored in 'weights'
+    Path(weights).resolve().parent.mkdir(parents=True, exist_ok=True)
+    weights_file = Path(weights).name
+
+    # Try to download weights if not available locally
+    if not Path(weights).exists():
+        try:
+            os.system('wget https://pjreddie.com/media/files/' + weights_file + ' -O ' + weights)
+        except IOError:
+            print(weights + ' not found')
+
+    # Open the weights file
+    with Path(weights).open('rb') as fp:
+        header = np.fromfile(fp, dtype=np.int32, count=5)  # First five are header values
+
+        # Needed to write header when saving weights
+        model.header_info = header
+
+        model.seen = header[3]  # number of images seen during training
+        weights = np.fromfile(fp, dtype=np.float32)  # The rest are weights
+
+    ptr = 0
+    for module in model.modules():
+        if isinstance(module, nn.Conv2d):
+            # Load conv. weights
+            num_w = module.weight.numel()
+            conv_w = torch.from_numpy(weights[ptr:ptr + num_w]).view_as(module.weight)
+            module.weight.data.copy_(conv_w)
+            ptr += num_w
+
+        elif isinstance(module, nn.BatchNorm2d):
+            # Load BN bias, weights, running mean and running variance
+            num_b = module.bias.numel()  # Number of biases
+            # Bias
+            bn_b = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.bias)
+            module.bias.data.copy_(bn_b)
+            ptr += num_b
+            # Weight
+            bn_w = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.weight)
+            module.weight.data.copy_(bn_w)
+            ptr += num_b
+            # Running Mean
+            bn_rm = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.running_mean)
+            module.running_mean.data.copy_(bn_rm)
+            ptr += num_b
+            # Running Var
+            bn_rv = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.running_var)
+            module.running_var.data.copy_(bn_rv)
+            ptr += num_b
+
+    print("Loading of backbone weights succeed.")

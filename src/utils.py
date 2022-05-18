@@ -1,9 +1,14 @@
-import os
 from pathlib import Path
 
 import numpy as np
 import torch
-from torch import nn
+
+
+def mkdir_if_missing(dir_path):
+    """
+    Make directory if it doesn't exist correspond to path.
+    """
+    Path(dir_path).mkdir(parents=True, exist_ok=True)
 
 
 def xyxy2xywh(x):
@@ -171,6 +176,7 @@ def generate_anchor(ngh, ngw, anchor_wh):
     mesh = np.tile(np.expand_dims(mesh, 0), (na, 1, 1, 1)).astype(np.float32)  # Shape na, 2, ngh, ngw
     anchor_offset_mesh = np.tile(np.expand_dims(np.expand_dims(anchor_wh, -1), -1), (1, 1, ngh, ngw))  # Shape na, 2, ngh, ngw
     anchor_mesh = np.concatenate((mesh, anchor_offset_mesh), axis=1)  # Shape na, 4, ngh, ngw
+
     return anchor_mesh
 
 
@@ -188,6 +194,40 @@ def encode_delta(gt_box_list, fg_anchor_list):
     dh = np.log(gh / ph)
 
     return np.stack([dx, dy, dw, dh], axis=1)
+
+
+def decode_delta(delta_map, anchors):
+    """
+    Network predicts delta for base anchors.
+
+    Decode delta of bbox predictions and summarize it with anchors.
+    """
+    anchors_unsqueezed = anchors.unsqueeze(-1).unsqueeze(-1)
+    nb, na, ngh, ngw, _ = delta_map.shape
+    yy, xx = torch.meshgrid(torch.arange(ngh), torch.arange(ngw), indexing='ij')
+
+    mesh = torch.stack([xx, yy], dim=0).float().cuda()  # Shape (2, ngh, ngw)
+    mesh = mesh.unsqueeze(0).repeat((nb, na, 1, 1, 1))   # Shape (nb, na, 2, ngh, ngw)
+    anchor_offset_mesh = anchors_unsqueezed.repeat((nb, 1, 1, ngh, ngw))  # Shape (nb, na, 2, ngh, ngw)
+    anchor_mesh = torch.cat((mesh, anchor_offset_mesh), dim=2)  # Shape (nb, na, 4, ngh, ngw)
+
+    anchor_mesh = anchor_mesh.permute(0, 1, 3, 4, 2)
+
+    delta = delta_map.reshape(-1, 4)
+    fg_anchor_list = anchor_mesh.reshape(-1, 4)
+    px, py, pw, ph = fg_anchor_list[:, 0], fg_anchor_list[:, 1], \
+                     fg_anchor_list[:, 2], fg_anchor_list[:, 3]
+    dx, dy, dw, dh = delta[:, 0], delta[:, 1], delta[:, 2], delta[:, 3]
+    gx = pw * dx + px
+    gy = ph * dy + py
+    gw = pw * torch.exp(dw)
+    gh = ph * torch.exp(dh)
+
+    pred_list = torch.stack([gx, gy, gw, gh], dim=1)
+
+    pred_map = pred_list.reshape(nb, na, ngh, ngw, 4)
+
+    return pred_map
 
 
 def create_grids(anchors, img_size, ngw):
@@ -408,60 +448,6 @@ def compute_ap(recall, precision):
     # and sum (\Delta recall) * prec
     ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
     return ap
-
-
-def load_darknet_weights(model, weights):
-    # Parses and loads the weights stored in 'weights'
-    Path(weights).resolve().parent.mkdir(parents=True, exist_ok=True)
-    weights_file = Path(weights).name
-
-    # Try to download weights if not available locally
-    if not Path(weights).exists():
-        try:
-            os.system('wget https://pjreddie.com/media/files/' + weights_file + ' -O ' + weights)
-        except IOError:
-            print(weights + ' not found')
-
-    # Open the weights file
-    with Path(weights).open('rb') as fp:
-        header = np.fromfile(fp, dtype=np.int32, count=5)  # First five are header values
-
-        # Needed to write header when saving weights
-        model.header_info = header
-
-        model.seen = header[3]  # number of images seen during training
-        weights = np.fromfile(fp, dtype=np.float32)  # The rest are weights
-
-    ptr = 0
-    for module in model.modules():
-        if isinstance(module, nn.Conv2d):
-            # Load conv. weights
-            num_w = module.weight.numel()
-            conv_w = torch.from_numpy(weights[ptr:ptr + num_w]).view_as(module.weight)
-            module.weight.data.copy_(conv_w)
-            ptr += num_w
-
-        elif isinstance(module, nn.BatchNorm2d):
-            # Load BN bias, weights, running mean and running variance
-            num_b = module.bias.numel()  # Number of biases
-            # Bias
-            bn_b = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.bias)
-            module.bias.data.copy_(bn_b)
-            ptr += num_b
-            # Weight
-            bn_w = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.weight)
-            module.weight.data.copy_(bn_w)
-            ptr += num_b
-            # Running Mean
-            bn_rm = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.running_mean)
-            module.running_mean.data.copy_(bn_rm)
-            ptr += num_b
-            # Running Var
-            bn_rv = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.running_var)
-            module.running_var.data.copy_(bn_rv)
-            ptr += num_b
-
-    print("Loading of backbone weights succeed.")
 
 
 def collate_fn(raw_batch):

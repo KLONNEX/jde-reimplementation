@@ -49,7 +49,7 @@ anchor_scales: [
 
 # other
 is_distributed: False
-dataset_root: '/4TB/perminov/datasets/JDE'
+dataset_root: '/root/path/to/dataset/JDE'
 device_id: 0
 device_start: 0
 ckpt_url: '/path/to/checkpoint'

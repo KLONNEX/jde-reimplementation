@@ -17,6 +17,9 @@ from src.model import YOLOv3
 from src.utils import collate_fn
 from src.utils import load_darknet_weights
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+
 
 def worker_init_fn(worker_id):
     """
