@@ -29,7 +29,6 @@ cp ./cfg/*.yaml "$LOGS_DIR"/training_configs
 cp -r src "$LOGS_DIR"/training_configs
 
 python train.py \
-    --device_id=0 \
     --logs_dir="$LOGS_DIR" \
     --ckpt_url="$CKPT_URL" \
     --dataset_root="$DATASET_ROOT" \

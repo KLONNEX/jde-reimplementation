@@ -14,11 +14,9 @@ from src.darknet import ResidualBlock
 from src.dataset import JointDataset
 from src.model import JDE
 from src.model import YOLOv3
+from src.model import load_darknet_weights
 from src.utils import collate_fn
-from src.utils import load_darknet_weights
-
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+from src.log_utils import logger
 
 
 def worker_init_fn(worker_id):
@@ -128,18 +126,18 @@ def main():
                 optimizer.zero_grad()
 
             if step % config.log_step == 0 and step != 0:
-                logger = f'epoch {epoch}/{config.epochs} ' \
-                         f'step {step}/{len(dataloader)} ' \
-                         f'loss {np.mean(running_loss)}'
+                log = f'epoch {epoch}/{config.epochs} ' \
+                      f'step {step}/{len(dataloader)} ' \
+                      f'loss {np.mean(running_loss)}'
 
-                print(logger)
+                logger.info(log)
 
                 running_loss = []
             else:
                 running_loss.append(loss.detach().cpu().numpy())
 
-        logger = f'{epoch} epoch time {(time.time() - epoch_start) // 60} minutes'
-        print(logger)
+        log = f'{epoch} epoch time {(time.time() - epoch_start) // 60} minutes'
+        logger.info(log)
 
         checkpoint_name = str(Path(config.logs_dir, f'JDE-{epoch}.pt'))
         checkpoint = {
