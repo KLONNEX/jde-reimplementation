@@ -73,6 +73,7 @@ def iou_distance(atracks, btracks):
 
     return cost_matrix
 
+
 def embedding_distance(tracks, detections):
     """
     Compute embedding distance.

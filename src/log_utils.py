@@ -8,13 +8,12 @@ class Timer:
     A simple timer.
     """
     def __init__(self):
-        self.total_time = 0.
-        self.calls = 0
-        self.start_time = 0.
-        self.diff = 0.
         self.average_time = 0.
-
+        self.total_time = 0.
+        self.start_time = 0.
         self.duration = 0.
+        self.calls = 0
+        self.diff = 0.
 
     def tic(self):
         """
@@ -34,18 +33,19 @@ class Timer:
             self.duration = self.average_time
         else:
             self.duration = self.diff
+
         return self.duration
 
     def clear(self):
         """
         Clear values.
         """
-        self.total_time = 0.
-        self.calls = 0
-        self.start_time = 0.
-        self.diff = 0.
         self.average_time = 0.
+        self.total_time = 0.
+        self.start_time = 0.
         self.duration = 0.
+        self.calls = 0
+        self.diff = 0.
 
 
 def get_logger(name='root'):

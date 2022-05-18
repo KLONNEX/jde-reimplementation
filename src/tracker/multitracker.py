@@ -399,6 +399,7 @@ def joint_stracks(tlista, tlistb):
             res.append(t)
     return res
 
+
 def sub_stracks(tlista, tlistb):
     """
     Delete stracks.
@@ -411,6 +412,7 @@ def sub_stracks(tlista, tlistb):
         if stracks.get(tid, 0):
             del stracks[tid]
     return list(stracks.values())
+
 
 def remove_duplicate_stracks(stracksa, stracksb):
     """
