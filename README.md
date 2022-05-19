@@ -22,7 +22,7 @@
 # [Original](#contents)
 
 This is the significantly clear PyTorch re-implementation of the JDE model from the
-[original code](#https://github.com/Zhongdao/Towards-Realtime-MOT) with some improvements.
+[original code](https://github.com/Zhongdao/Towards-Realtime-MOT) with some improvements.
 
 [Paper](https://arxiv.org/pdf/1909.12605.pdf): Towards Real-Time Multi-Object Tracking. Department of Electronic Engineering, Tsinghua University
 
