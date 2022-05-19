@@ -3,7 +3,8 @@ import time
 from pathlib import Path
 
 import numpy as np
-import torch
+from torch import save
+from torch.nn import DataParallel
 from torch.optim import SGD
 from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
@@ -12,11 +13,11 @@ from cfg.config import config
 from src.darknet import DarkNet
 from src.darknet import ResidualBlock
 from src.dataset import JointDataset
+from src.log_utils import logger
 from src.model import JDE
 from src.model import YOLOv3
 from src.model import load_darknet_weights
 from src.utils import collate_fn
-from src.log_utils import logger
 
 
 def worker_init_fn(worker_id):
@@ -69,6 +70,8 @@ def init_train_model(cfg, nid):
     for param in network.parameters():
         if param.requires_grad:
             optimizer_params.append(param)
+
+    network = DataParallel(network)
 
     return network, optimizer_params
 
@@ -144,7 +147,7 @@ def main():
             'model': model.state_dict(),
         }
 
-        torch.save(checkpoint, checkpoint_name)
+        save(checkpoint, checkpoint_name)
 
         scheduler.step()
 

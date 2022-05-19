@@ -182,17 +182,17 @@ Results of the inference will be saved into default `./results` folder, logs wil
 | Optimizer                  | SGD                                                                                 |
 | Loss Function              | SmoothL1Loss, SoftmaxCrossEntropyWithLogits (and apply auto-balancing loss strategy)|
 | Outputs                    | Tensor of bbox cords, conf, class, emb                                              |
-| Speed                      | ~ 1.4 hours/epoch                                                              |
+| Speed                      | ~ 1.4 hours/epoch                                                                   |
 | Total time                 | ~ 42 hours                                                                          |
 
 ### Evaluation Performance
 
-| Parameters          | GPU (1p)                                               |
-| ------------------- |--------------------------------------------------------|
-| Model               | JDE (1088*608)                                         |
-| Resource            | 1 Nvidia RTX 3090, Intel Xeon Gold 6226R CPU @ 2.90GHz |
-| Dataset             | MOT-16                                                 |
-| Batch_size          | 1                                                      |
-| Outputs             | Metrics, .txt predictions                              |
-| FPS                 |                                                        |
-| Metrics             |                                                        |
+| Parameters          | GPU (1p)                                                              |
+| ------------------- |-----------------------------------------------------------------------|
+| Model               | JDE (1088*608)                                                        |
+| Resource            | 1 Nvidia RTX 2080 Ti, AMD Ryzen Threadripper 1950x 16-Core @ 3.40 GHz |
+| Dataset             | MOT-16 (train)                                                        |
+| Batch_size          | 1                                                                     |
+| Outputs             | Metrics, .txt predictions                                             |
+| FPS                 |                                                                       |
+| Metrics             |                                                                       |
