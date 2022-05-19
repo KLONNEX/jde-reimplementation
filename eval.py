@@ -187,7 +187,7 @@ def main(
 
         logger.info('start seq: %s', seq)
 
-        dataloader = LoadImages(osp.join(data_root, seq, 'img1'), opt.anchor_scales, opt.img_size)
+        dataloader = LoadImages(osp.join(data_root, seq, 'img1'), opt)
 
         result_filename = os.path.join(result_root, f'{seq}.txt')
 
@@ -231,14 +231,14 @@ def main(
     metrics = mm.metrics.motchallenge_metrics
     mh = mm.metrics.create()
     summary = Evaluator.get_summary(accs, seqs, metrics)
-    strsummary = mm.io.render_summary(
+
+    string_summary = mm.io.render_summary(
         summary,
         formatters=mh.formatters,
         namemap=mm.io.motchallenge_metric_names
     )
 
-    print(strsummary)
-    Evaluator.save_summary(summary, os.path.join(result_root, f'summary_{exp_name}.xlsx'))
+    print(string_summary)
 
 
 if __name__ == '__main__':

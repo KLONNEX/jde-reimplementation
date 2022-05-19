@@ -20,19 +20,23 @@ class LoadImages:
 
     Args:
         path (str): Path to the directory, containing images.
-        img_size (list): Size of output image.
+        cfg: Config parameters.
     """
-    def __init__(self, path, anchor_scales, img_size=(1088, 608)):
+    def __init__(self, path, cfg):
         path = Path(path)
         if not path.is_dir():
             raise NotADirectoryError(f'Expected a path to the directory with images, got "{path}"')
 
         self.files = sorted(path.glob('*.jpg'))
 
-        self.anchors, self.strides = create_anchors_vec(anchor_scales)
+        self.anchors, self.strides = create_anchors_vec(cfg.anchor_scales)
         self.nf = len(self.files)  # Number of img files.
-        self.width = img_size[0]
-        self.height = img_size[1]
+        self.width = cfg.img_size[0]
+        self.height = cfg.img_size[1]
+        self.img_scale = 1. / cfg.img_scale
+        self.mean = np.array(cfg.img_mean).reshape((3, 1, 1))
+        self.std = np.array(cfg.img_std).reshape((3, 1, 1))
+
         self.count = 0
 
         assert self.nf > 0, 'No images found in ' + path
@@ -57,7 +61,8 @@ class LoadImages:
         # Normalize RGB
         img = img[:, :, ::-1].transpose(2, 0, 1)
         img = np.ascontiguousarray(img, dtype=np.float32)
-        img /= 255.0
+
+        img = (self.img_scale * img - self.mean) / self.std
 
         output = (img, img0)
 

@@ -341,7 +341,7 @@ class JDETracker:
         # Pred is tensor of all the proposals (default number of proposals: 54264).
         # Proposals have information associated with the bounding box and embeddings.
         pred = pred.cpu().numpy()
-        pred = pred[pred[:, :, 4] * 100 > self.opt.conf_thres]
+        pred = pred[pred[:, :, 4] > self.opt.conf_thres]
         # Pred now has lesser number of proposals. Proposals rejected on basis of object confidence score.
 
         if pred.size > 0:
