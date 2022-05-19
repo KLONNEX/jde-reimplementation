@@ -2,6 +2,7 @@ import logging
 import os
 import os.path as osp
 
+import cv2
 import motmetrics as mm
 import numpy as np
 import torch
@@ -10,6 +11,7 @@ from cfg.config import config as default_config
 from src.darknet import DarkNet, ResidualBlock
 from src.dataset import LoadImages
 from src.evaluation import Evaluator
+from src.evaluation import plot_tracking
 from src.log_utils import Timer
 from src.log_utils import logger
 from src.model import JDEeval
@@ -17,6 +19,7 @@ from src.model import YOLOv3
 from src.tracker.multitracker import JDETracker
 from src.utils import mkdir_if_missing
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 _MOT16_VALIDATION_FOLDERS = (
     'MOT16-02',
     'MOT16-04',
@@ -158,6 +161,19 @@ def eval_seq(
         # save results
         results.append((frame_id + 1, online_tlwhs, online_ids))
         frame_id += 1
+
+        if save_dir is not None:
+            online_im = plot_tracking(
+                img0,
+                online_tlwhs,
+                online_ids,
+                frame_id=frame_id,
+                fps=1. / timer.average_time
+            )
+
+        if save_dir is not None:
+            cv2.imwrite(os.path.join(save_dir, '{:05d}.jpg'.format(frame_id)), online_im)
+
     # save results
     write_results(result_filename, results, data_type)
 

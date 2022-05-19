@@ -353,8 +353,10 @@ class JDETracker:
 
             # Detections is list of (x1, y1, x2, y2, object_conf, class_score, class_pred)
             # Class_pred is the embeddings.
-            detections = [TrackS(TrackS.tlbr_to_tlwh(tlbrs[:4]), tlbrs[4], f, 30) for
-                          (tlbrs, f) in zip(dets[:, :5], dets[:, 6:])]
+            detections = [
+                TrackS(TrackS.tlbr_to_tlwh(tlbrs[:4]), tlbrs[4], f, 30) for
+                (tlbrs, f) in zip(dets[:, :5], dets[:, 6:])
+            ]
         else:
             detections = []
 
