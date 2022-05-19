@@ -8,18 +8,15 @@ import numpy as np
 import torch
 
 from cfg.config import config as default_config
-from src.darknet import DarkNet, ResidualBlock
 from src.dataset import LoadImages
 from src.evaluation import Evaluator
 from src.evaluation import plot_tracking
 from src.log_utils import Timer
 from src.log_utils import logger
-from src.model import JDEeval
-from src.model import YOLOv3
+from src.model import init_eval_model
 from src.tracker.multitracker import JDETracker
 from src.utils import mkdir_if_missing
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 _MOT16_VALIDATION_FOLDERS = (
     'MOT16-02',
     'MOT16-04',
@@ -56,44 +53,6 @@ def write_results(filename, results, data_type):
                 line = save_format.format(frame=frame_id, id=track_id, x1=x1, y1=y1, x2=x2, y2=y2, w=w, h=h)
                 f.write(line)
     logger.info('Save results to %s', filename)
-
-
-def init_eval_model(cfg):
-    """
-    Initialize model, and load weights into backbone.
-
-    Args:
-        cfg: Config parameters.
-
-    Returns:
-        network: Compiled train model with loss.
-    """
-    backbone = DarkNet(
-        block=ResidualBlock,
-        layer_nums=cfg.backbone_layers,
-        in_channels=cfg.backbone_input_shape,
-        out_channels=cfg.backbone_output_shape,
-    )
-
-    net = YOLOv3(
-        backbone=backbone,
-        backbone_shape=cfg.backbone_output_shape,
-        out_channel=cfg.out_channel,
-    )
-
-    network = JDEeval(
-        extractor=net,
-        config=cfg,
-    )
-
-    weights = torch.load(cfg.ckpt_url)['model']
-    weights_keys = list(weights.keys())[-11:]
-    for key in weights_keys:
-        weights.pop(key)
-    network.load_state_dict(weights)
-    network.cuda().eval()
-
-    return network
 
 
 def eval_seq(

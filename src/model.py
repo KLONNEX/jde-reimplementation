@@ -6,9 +6,12 @@ from pathlib import Path
 import numpy as np
 import torch
 from torch import nn
+from torch.nn import DataParallel
 from torch.nn import functional as F
 
 from cfg.config import config as default_config
+from src.darknet import DarkNet
+from src.darknet import ResidualBlock
 from src.modules import YoloBlock
 from src.modules import _conv_bn_leaky
 from src.utils import create_anchors_vec
@@ -370,6 +373,90 @@ class JDEeval(nn.Module):
         output_top_k = output[0][top_k_indices]
 
         return output, output_top_k
+
+
+def init_train_model(cfg, nid):
+    """
+    Initialize model, and load weights into backbone.
+
+    Args:
+        cfg: Config parameters.
+        nid (int): Number of unique identities in the dataset.
+
+    Returns:
+        network: Compiled train model with loss.
+        optimizer_params (list): Trainable params of the model.
+    """
+    backbone = DarkNet(
+        block=ResidualBlock,
+        layer_nums=cfg.backbone_layers,
+        in_channels=cfg.backbone_input_shape,
+        out_channels=cfg.backbone_output_shape,
+    )
+
+    load_darknet_weights(model=backbone, weights=cfg.pretrained_path)
+
+    net = YOLOv3(
+        backbone=backbone,
+        backbone_shape=cfg.backbone_output_shape,
+        out_channel=cfg.out_channel,
+    )
+
+    network = JDE(
+        extractor=net,
+        config=cfg,
+        nid=nid,
+        ne=cfg.embedding_dim,
+    )
+
+    network.cuda().train()
+
+    optimizer_params = []
+    for param in network.parameters():
+        if param.requires_grad:
+            optimizer_params.append(param)
+
+    network = DataParallel(network)
+
+    return network, optimizer_params
+
+
+def init_eval_model(cfg):
+    """
+    Initialize model, and load weights into backbone.
+
+    Args:
+        cfg: Config parameters.
+
+    Returns:
+        network: Compiled train model with loss.
+    """
+    backbone = DarkNet(
+        block=ResidualBlock,
+        layer_nums=cfg.backbone_layers,
+        in_channels=cfg.backbone_input_shape,
+        out_channels=cfg.backbone_output_shape,
+    )
+
+    net = YOLOv3(
+        backbone=backbone,
+        backbone_shape=cfg.backbone_output_shape,
+        out_channel=cfg.out_channel,
+    )
+
+    network = JDEeval(
+        extractor=net,
+        config=cfg,
+    )
+
+    weights = torch.load(cfg.ckpt_url)['model']
+    weights_keys = list(weights.keys())[-11:]
+    for key in weights_keys:
+        weights.pop(key)
+    network.load_state_dict(weights)
+    network.cuda().eval()
+
+    return network
 
 
 def load_darknet_weights(model, weights):

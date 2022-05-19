@@ -4,19 +4,13 @@ from pathlib import Path
 
 import numpy as np
 from torch import save
-from torch.nn import DataParallel
 from torch.optim import SGD
 from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
 
 from cfg.config import config
-from src.darknet import DarkNet
-from src.darknet import ResidualBlock
 from src.dataset import JointDataset
 from src.log_utils import logger
-from src.model import JDE
-from src.model import YOLOv3
-from src.model import load_darknet_weights
 from src.utils import collate_fn
 
 
@@ -28,52 +22,6 @@ def worker_init_fn(worker_id):
         worker_id: Id of the current cpu worker.
     """
     np.random.seed(np.random.get_state()[1][0] + worker_id)
-
-
-def init_train_model(cfg, nid):
-    """
-    Initialize model, and load weights into backbone.
-
-    Args:
-        cfg: Config parameters.
-        nid (int): Number of unique identities in the dataset.
-
-    Returns:
-        network: Compiled train model with loss.
-        optimizer_params (list): Trainable params of the model.
-    """
-    backbone = DarkNet(
-        block=ResidualBlock,
-        layer_nums=cfg.backbone_layers,
-        in_channels=cfg.backbone_input_shape,
-        out_channels=cfg.backbone_output_shape,
-    )
-
-    load_darknet_weights(model=backbone, weights=config.pretrained_path)
-
-    net = YOLOv3(
-        backbone=backbone,
-        backbone_shape=cfg.backbone_output_shape,
-        out_channel=cfg.out_channel,
-    )
-
-    network = JDE(
-        extractor=net,
-        config=cfg,
-        nid=nid,
-        ne=cfg.embedding_dim,
-    )
-
-    network.cuda().train()
-
-    optimizer_params = []
-    for param in network.parameters():
-        if param.requires_grad:
-            optimizer_params.append(param)
-
-    network = DataParallel(network)
-
-    return network, optimizer_params
 
 
 def main():
