@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from cfg.config import config
 from src.dataset import JointDataset
 from src.log_utils import logger
+from src.model import init_train_model
 from src.utils import collate_fn
 
 

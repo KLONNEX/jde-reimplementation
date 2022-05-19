@@ -1,4 +1,3 @@
-"""Inference script."""
 import os
 import os.path as osp
 
@@ -13,8 +12,10 @@ from src.utils import mkdir_if_missing
 def track(opt):
     """
     Inference of the input video.
-
     Save the results into output-root (video, annotations and frames.).
+
+    Args:
+        opt: Config parameters.
     """
     result_root = opt.output_root if opt.output_root != '' else '.'
     mkdir_if_missing(result_root)

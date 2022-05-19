@@ -15,7 +15,7 @@ from src.log_utils import logger
 from src.model import init_eval_model
 from src.tracker.multitracker import JDETracker
 from src.utils import mkdir_if_missing
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+
 _MOT16_VALIDATION_FOLDERS = (
     'MOT16-02',
     'MOT16-04',
@@ -74,7 +74,7 @@ def eval_seq(
         dataloader (Any): Fetching the image sequence and associated data.
         data_type (str): Type of dataset corresponding(similar) to the given video.
         result_filename (str): The name(path) of the file for storing results.
-        net (nn.Cell): Model.
+        net (nn.Cell): Inited evaluation model.
         save_dir (str): Path to output results.
         frame_rate (int): Frame-rate of the given video.
 
@@ -145,6 +145,16 @@ def main(
         exp_name,
         save_videos=False,
 ):
+    """
+    Evaluation with metric visualisation.
+
+    Args:
+        opt: Config parameters.
+        data_root (str): Path to the sequences root folder.
+        seqs (tuple): Names of sequences folders.
+        exp_name (str): Experiment running name.
+        save_videos (bool): Save output videos or not.
+    """
     result_root = os.path.join(data_root, '..', 'results', exp_name)
     mkdir_if_missing(result_root)
     data_type = 'mot'
