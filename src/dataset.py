@@ -61,28 +61,7 @@ class LoadImages:
         # Normalize RGB
         img = img[:, :, ::-1].transpose(2, 0, 1)
         img = np.ascontiguousarray(img, dtype=np.float32)
-
         img = (self.img_scale * img - self.mean) / self.std
-
-        output = (img, img0)
-
-        return output
-
-    def __getitem__(self, idx):
-        idx = idx % self.nf
-        img_path = self.files[idx]
-
-        # Read image
-        img0 = cv2.imread(img_path)  # BGR
-        assert img0 is not None, 'Failed to load ' + img_path
-
-        # Padded resize
-        img, _, _, _ = letterbox(img0, height=self.height, width=self.width)
-
-        # Normalize RGB
-        img = img[:, :, ::-1].transpose(2, 0, 1)
-        img = np.ascontiguousarray(img, dtype=np.float32)
-        img /= 255.0
 
         output = (img, img0)
 
@@ -98,14 +77,14 @@ class LoadVideo:
 
     Args:
         path (str): Path to video.
-        img_size (tuple): Size of output images size.
+        cfg: Config parameters.
 
     Returns:
         count (int): Number of frame.
         img (np.array): Processed image.
         img0 (np.array): Original image.
     """
-    def __init__(self, path, anchor_scales, img_size=(1088, 608)):
+    def __init__(self, path, cfg):
         if not os.path.isfile(path):
             raise FileExistsError
 
@@ -115,16 +94,22 @@ class LoadVideo:
         self.vh = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.vn = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        self.anchors, self.strides = create_anchors_vec(anchor_scales)
+        self.anchors, self.strides = create_anchors_vec(cfg.anchor_scales)
 
-        self.width = img_size[0]
-        self.height = img_size[1]
+        self.width = cfg.img_size[0]
+        self.height = cfg.img_size[1]
+        self.img_scale = 1. / cfg.img_scale
+        self.mean = np.array(cfg.img_mean).reshape((3, 1, 1))
+        self.std = np.array(cfg.img_std).reshape((3, 1, 1))
+
         self.count = 0
 
         self.w, self.h = self.get_size(self.vw, self.vh, self.width, self.height)
+
         print(f'Lenth of the video: {self.vn:d} frames')
 
-    def get_size(self, vw, vh, dw, dh):
+    @staticmethod
+    def get_size(vw, vh, dw, dh):
         wa, ha = float(dw) / vw, float(dh) / vh
         a = min(wa, ha)
         return int(vw * a), int(vh * a)
@@ -148,7 +133,7 @@ class LoadVideo:
         # Normalize RGB
         img = img[:, :, ::-1].transpose(2, 0, 1)
         img = np.ascontiguousarray(img, dtype=np.float32)
-        img /= 255.0
+        img = (self.img_scale * img - self.mean) / self.std
 
         output = (img, img0)
 

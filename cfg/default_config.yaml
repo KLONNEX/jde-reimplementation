@@ -51,7 +51,7 @@ anchor_scales: [
 is_distributed: False
 dataset_root: '/root/path/to/dataset/JDE'
 ckpt_url: '/path/to/checkpoint'
-pretrained_path: '/path/to/pretrained/darknet53.conv.74'
+pretrained_path: 'pretrained/darknet53.conv.74'
 logs_dir: 'logs'
 input_video: '/path/to/input/video'
 output_format: 'video'
