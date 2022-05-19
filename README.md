@@ -1,33 +1,32 @@
-# Contents
+# JDE re-implementation
 
-- [Contents](#contents)
-    - [Original](#original)
-    - [JDE Description](#jde-description)
-    - [Model Architecture](#model-architecture)
-    - [Dataset](#dataset)
-    - [Quick Start](#quick-start)
-    - [Script Description](#script-description)
-        - [Training Process](#training-process)
-            - [Standalone Training](#standalone-training)
-            - [Distribute Training](#distribute-training)
-        - [Evaluation Process](#evaluation-process)
-            - [Evaluation](#evaluation)
-        - [Inference Process](#inference-process)
-            - [Usage](#usage)
-            - [Result](#result)
-    - [Model Description](#model-description)
-        - [Performance](#performance)
-            - [Training Performance](#training-performance)
-            - [Evaluation Performance](#evaluation-performance)
+- [Original](#original)
+- [JDE Description](#jde-description)
+- [Model Architecture](#model-architecture)
+- [Dataset](#dataset)
+- [Quick Start](#quick-start)
+- [Script Description](#script-description)
+    - [Training Process](#training-process)
+        - [Standalone Training](#standalone-training)
+        - [Distribute Training](#distribute-training)
+    - [Evaluation Process](#evaluation-process)
+        - [Evaluation](#evaluation)
+    - [Inference Process](#inference-process)
+        - [Usage](#usage)
+        - [Result](#result)
+- [Model Description](#model-description)
+    - [Performance](#performance)
+        - [Training Performance](#training-performance)
+        - [Evaluation Performance](#evaluation-performance)
 
-## [Original](#contents)
+# [Original](#contents)
 
 This is the significantly clear PyTorch re-implementation of the JDE model from the
 [original code](#https://github.com/Zhongdao/Towards-Realtime-MOT) with some improvements.
 
 [Paper](https://arxiv.org/pdf/1909.12605.pdf): Towards Real-Time Multi-Object Tracking. Department of Electronic Engineering, Tsinghua University
 
-## [JDE Description](#contents)
+# [JDE Description](#contents)
 
 Paper with introduced JDE model is dedicated to the improving efficiency of an MOT system.
 It's introduce an early attempt that Jointly learns the Detector and Embedding model (JDE) in a single-shot deep network.
@@ -36,7 +35,7 @@ In comparison, SDE methods and two-stage methods are characterized by re-sampled
 Both the bounding boxes and feature maps are fed into a separate re-ID model for appearance feature extraction.
 Method is near real-time while being almost as accurate as the SDE methods.
 
-## [Model Architecture](#contents)
+# [Model Architecture](#contents)
 
 Architecture of the JDE is the Feature Pyramid Network (FPN).
 FPN makes predictions from multiple scales, thus bringing improvement in pedestrian detection where the scale of targets varies a lot.
@@ -45,7 +44,7 @@ Then, the feature map with the smallest size (also the semantically strongest fe
 Finally, prediction heads are added upon fused feature maps at all the three scales.
 A prediction head consists of several stacked convolutional layers and outputs a dense prediction map of size (6A + D) × H × W, where A is the number of anchor templates assigned to this scale, and D is the dimension of the embedding.
 
-## [Dataset](#contents)
+# [Dataset](#contents)
 
 Used a large-scale training set by putting together six publicly available datasets on pedestrian detection, MOT and person search.
 
@@ -81,7 +80,7 @@ Information about train part of dataset.
 | # box   |17K  |21K  |46K  |112K |55K  |18K  |270K   |
 | # ID    |-    |-    |0.6K |0.5K |7K   |0.5K |8.7K   |
 
-## [Quick Start](#contents)
+# [Quick Start](#contents)
 
 You can follow the steps below for training and evaluation, in particular, before training,
 you need to install `requirements.txt` by following command `pip install -r requirements.txt`.
@@ -100,9 +99,9 @@ bash scripts/run_standalone_train_gpu.sh [DEVICE_ID] [LOGS_CKPT_DIR] [DATASET_RO
 - LOGS_CKPT_DIR - path to the directory, where the training results will be stored.
 - DATASET_ROOT - Path to the dataset root directory (containing all dataset parts, described in [DATASET_ZOO.md](DATASET_ZOO.md))
 
-### [Training Process](#contents)
+## [Training Process](#contents)
 
-#### Standalone Training
+### Standalone Training
 
 Note: For all trainings necessary to use pretrained backbone darknet53.
 
@@ -119,9 +118,9 @@ After training, you can get the training loss and time logs in chosen logs_dir.
 
 The model checkpoints will be saved in LOGS_CKPT_DIR directory.
 
-### [Evaluation Process](#contents)
+## [Evaluation Process](#contents)
 
-#### Evaluation
+### Evaluation
 
 Tracking ability of the model is tested on the train part of the MOT16 dataset (doesn't use during training).
 
@@ -153,9 +152,9 @@ python eval_detect.py --device_id [DEVICE_ID] --ckpt_url [CKPT_URL] --dataset_ro
 
 Results of evaluation will be visualized at command line.
 
-### [Inference Process](#contents)
+## [Inference Process](#contents)
 
-#### Usage
+### Usage
 
 To compile video from frames with predicted bounding boxes, you need to install `ffmpeg` by using
 `sudo apt-get install ffmpeg`. Video compiling will happen automatically.
@@ -164,15 +163,15 @@ To compile video from frames with predicted bounding boxes, you need to install 
 python infer.py --device_id [DEVICE_ID] --ckpt_url [CKPT_URL] --input_video [INPUT_VIDEO]
 ```
 
-#### Result
+### Result
 
 Results of the inference will be saved into default `./results` folder, logs will be shown at command line.
 
-## [Model Description](#contents)
+# [Model Description](#contents)
 
-### [Performance](#contents)
+## [Performance](#contents)
 
-#### Training Performance
+### Training Performance
 
 | Parameters                 | GPU (1p)                                                                            |
 | -------------------------- |-----------------------------------------------------------------------------------  |
@@ -186,7 +185,7 @@ Results of the inference will be saved into default `./results` folder, logs wil
 | Speed                      | ~ 1.4 hours/epoch                                                              |
 | Total time                 | ~ 42 hours                                                                          |
 
-#### Evaluation Performance
+### Evaluation Performance
 
 | Parameters          | GPU (1p)                                               |
 | ------------------- |--------------------------------------------------------|
