@@ -58,6 +58,7 @@ output_format: 'video'
 output_root: 'results'
 save_images: False
 save_videos: False
+num_workers: 8
 
 ---
 # Config description for each option
@@ -94,3 +95,4 @@ output_format: 'Expected output format.'
 output_root: 'Expected output root path.'
 save_images: 'Save tracking results (image).'
 save_videos: 'Save tracking results (video).'
+num_workers: 'Number of parallel workers of the dataloader.'

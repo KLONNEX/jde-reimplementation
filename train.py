@@ -99,7 +99,7 @@ def main():
         batch_size=config.batch_size,
         shuffle=True,
         drop_last=True,
-        num_workers=8,
+        num_workers=config.num_workers,
         worker_init_fn=worker_init_fn,
     )
 
