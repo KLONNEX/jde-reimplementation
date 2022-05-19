@@ -65,3 +65,4 @@ def get_logger(name='root'):
 
 
 logger = get_logger('root')
+logger.setLevel(logging.INFO)

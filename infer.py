@@ -1,5 +1,4 @@
 """Inference script."""
-import logging
 import os
 import os.path as osp
 
@@ -9,8 +8,6 @@ from src.dataset import LoadVideo
 from src.log_utils import logger
 from src.model import init_eval_model
 from src.utils import mkdir_if_missing
-
-logger.setLevel(logging.INFO)
 
 
 def track(opt):

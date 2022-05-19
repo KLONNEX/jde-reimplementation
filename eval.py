@@ -1,4 +1,3 @@
-import logging
 import os
 import os.path as osp
 
@@ -16,7 +15,7 @@ from src.log_utils import logger
 from src.model import init_eval_model
 from src.tracker.multitracker import JDETracker
 from src.utils import mkdir_if_missing
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 _MOT16_VALIDATION_FOLDERS = (
     'MOT16-02',
     'MOT16-04',
@@ -146,7 +145,6 @@ def main(
         exp_name,
         save_videos=False,
 ):
-    logger.setLevel(logging.INFO)
     result_root = os.path.join(data_root, '..', 'results', exp_name)
     mkdir_if_missing(result_root)
     data_type = 'mot'
