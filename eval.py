@@ -126,7 +126,7 @@ def eval_seq(
                 online_tlwhs,
                 online_ids,
                 frame_id=frame_id,
-                fps=1. / timer.average_time
+                fps=1. / timer.average_time,
             )
 
         if save_dir is not None:

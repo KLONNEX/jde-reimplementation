@@ -187,6 +187,10 @@ class DarkNet(nn.Module):
             out_channel=out_channels[4],
         )
 
+        if not self.detect:
+            self.glob_avg_pool = nn.AdaptiveAvgPool2d((1, 1))
+            self.fc = nn.Linear(1024, 1000)
+
     @staticmethod
     def _build_block(
             block,
@@ -239,5 +243,8 @@ class DarkNet(nn.Module):
 
         if self.detect:
             return c7, c9, c11
+
+        c11 = self.glob_avg_pool(c11)
+        c11 = self.fc(c11.view(-1, 1024))
 
         return c11

@@ -394,7 +394,7 @@ def init_train_model(cfg, nid):
         out_channels=cfg.backbone_output_shape,
     )
 
-    load_darknet_weights(model=backbone, weights=cfg.pretrained_path)
+    load_darknet_weights(model=backbone, weights_path=cfg.ckpt_url)
 
     net = YOLOv3(
         backbone=backbone,
@@ -459,63 +459,22 @@ def init_eval_model(cfg):
     return network
 
 
-def load_darknet_weights(model, weights):
+def load_darknet_weights(model, weights_path):
     """
     Load backbone weights into model from existing file
     or download and load if not exist.
 
     Args:
         model: Inited train model with backbone.
-        weights (str): Path to backbone weights file.
+        weights_path (str): Path to backbone weights file.
     """
-    # Parses and loads the weights stored in 'weights'
-    Path(weights).resolve().parent.mkdir(parents=True, exist_ok=True)
-    weights_file = Path(weights).name
+    model_keys = list(model.state_dict().keys())
+    weights = torch.load(weights_path)['state_dict']
+    weights_keys = list(weights.keys())[:-2]  # Cut the fc layer
+    weights_new = {}
+    for model_key, weights_key in zip(model_keys, weights_keys):
+        weights_new[model_key] = weights[weights_key]
 
-    # Try to download weights if not available locally
-    if not Path(weights).exists():
-        try:
-            os.system('wget https://pjreddie.com/media/files/' + weights_file + ' -O ' + weights)
-        except IOError:
-            print(weights + ' not found')
-
-    # Open the weights file
-    with Path(weights).open('rb') as fp:
-        header = np.fromfile(fp, dtype=np.int32, count=5)  # First five are header values
-
-        # Needed to write header when saving weights
-        model.header_info = header
-
-        model.seen = header[3]  # number of images seen during training
-        weights = np.fromfile(fp, dtype=np.float32)  # The rest are weights
-
-    ptr = 0
-    for module in model.modules():
-        if isinstance(module, nn.Conv2d):
-            # Load conv. weights
-            num_w = module.weight.numel()
-            conv_w = torch.from_numpy(weights[ptr:ptr + num_w]).view_as(module.weight)
-            module.weight.data.copy_(conv_w)
-            ptr += num_w
-
-        elif isinstance(module, nn.BatchNorm2d):
-            # Load BN bias, weights, running mean and running variance
-            num_b = module.bias.numel()  # Number of biases
-            # Bias
-            bn_b = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.bias)
-            module.bias.data.copy_(bn_b)
-            ptr += num_b
-            # Weight
-            bn_w = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.weight)
-            module.weight.data.copy_(bn_w)
-            ptr += num_b
-            # Running Mean
-            bn_rm = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.running_mean)
-            module.running_mean.data.copy_(bn_rm)
-            ptr += num_b
-            # Running Var
-            bn_rv = torch.from_numpy(weights[ptr:ptr + num_b]).view_as(module.running_var)
-            module.running_var.data.copy_(bn_rv)
-            ptr += num_b
+    model.load_state_dict(weights_new)
 
     print("Loading of backbone weights succeed.")

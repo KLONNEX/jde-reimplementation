@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ $# -ne 3 ]]; then
-    echo "Usage: bash scripts/run_standalone_train_gpu.sh [DEVICE_ID] [LOGS_CKPT_DIR] [DATA_ROOT]"
+if [[ $# -ne 4 ]]; then
+    echo "Usage: bash scripts/run_standalone_train_gpu.sh [DEVICE_ID] [LOGS_CKPT_DIR] [DATA_ROOT] [BACKBONE_PATH]"
 exit 1
 fi
 
@@ -17,6 +17,7 @@ get_real_path(){
 
 LOGS_DIR=$(get_real_path "$2")
 DATASET_ROOT=$(get_real_path "$3")
+CKPT_URL=$(get_real_path "$4")
 
 if [ !  -d "$LOGS_DIR" ]; then
   mkdir "$LOGS_DIR"
@@ -30,4 +31,5 @@ cp -r src "$LOGS_DIR"/training_configs
 python train.py \
     --logs_dir="$LOGS_DIR" \
     --dataset_root="$DATASET_ROOT" \
+    --ckpt_url="$CKPT_URL" \
     > "$LOGS_DIR"/standalone_train.log 2>&1 &

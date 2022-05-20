@@ -88,16 +88,18 @@ you need to install `requirements.txt` by following command `pip install -r requ
 > If an error occurred, update pip by `pip install --upgrade pip` and try again.
 > If it didn't help install packages manually by using `pip install {package from requirements.txt}`.
 
-All trainings will starts from pre-trained backbone, which will automatically downloaded by running training scripts.
+All trainings will starts from pre-trained backbone
+([link](https://drive.google.com/file/d/1keZwVIfcWmxfTiswzOKUwkUz2xjvTvfm/view) for download).
 
 ```bash
 # Run standalone training example
-bash scripts/run_standalone_train_gpu.sh [DEVICE_ID] [LOGS_CKPT_DIR] [DATASET_ROOT]
+bash scripts/run_standalone_train_gpu.sh [DEVICE_ID] [LOGS_CKPT_DIR] [DATASET_ROOT] [BACKBONE_PATH]
 ```
 
 - DEVICE_ID - device ID
 - LOGS_CKPT_DIR - path to the directory, where the training results will be stored.
 - DATASET_ROOT - Path to the dataset root directory (containing all dataset parts, described in [DATASET_ZOO.md](DATASET_ZOO.md))
+- BACKBONE_PATH - Path to the downloaded pre-trained darknet53 checkpoint.
 
 ## [Training Process](#contents)
 
@@ -106,12 +108,13 @@ bash scripts/run_standalone_train_gpu.sh [DEVICE_ID] [LOGS_CKPT_DIR] [DATASET_RO
 Note: For all trainings necessary to use pretrained backbone darknet53.
 
 ```bash
-bash scripts/run_standalone_train_gpu.sh [DEVICE_ID] [LOGS_CKPT_DIR] [DATASET_ROOT]
+bash scripts/run_standalone_train_gpu.sh [DEVICE_ID] [LOGS_CKPT_DIR] [DATASET_ROOT] [BACKBONE_PATH]
 ```
 
 - DEVICE_ID - device ID
 - LOGS_CKPT_DIR - path to the directory, where the training results will be stored.
 - DATASET_ROOT - Path to the dataset root directory (containing all dataset parts, described in [DATASET_ZOO.md](DATASET_ZOO.md))
+- BACKBONE_PATH - Path to the downloaded pre-trained darknet53 checkpoint.
 
 The above command will run in the background, you can view the result through the generated standalone_train.log file.
 After training, you can get the training loss and time logs in chosen logs_dir.
