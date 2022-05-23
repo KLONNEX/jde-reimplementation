@@ -25,6 +25,8 @@ Then, the feature map with the smallest size (also the semantically strongest fe
 Finally, prediction heads are added upon fused feature maps at all the three scales.
 A prediction head consists of several stacked convolutional layers and outputs a dense prediction map of size (6A + D) × H × W, where A is the number of anchor templates assigned to this scale, and D is the dimension of the embedding.
 
+![architecture](media/schematic_acrhitecture.jpg)
+
 </details>
 
 <details>
