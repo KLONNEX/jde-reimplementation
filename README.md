@@ -26,7 +26,8 @@ This is the significantly clear PyTorch re-implementation of the JDE model from 
 
 [Paper](https://arxiv.org/pdf/1909.12605.pdf): Towards Real-Time Multi-Object Tracking. Department of Electronic Engineering, Tsinghua University
 
-# [JDE Description](#contents)
+<details open>
+<summary>JDE description</summary>
 
 Paper with introduced JDE model is dedicated to the improving efficiency of an MOT system.
 It's introduce an early attempt that Jointly learns the Detector and Embedding model (JDE) in a single-shot deep network.
@@ -35,14 +36,14 @@ In comparison, SDE methods and two-stage methods are characterized by re-sampled
 Both the bounding boxes and feature maps are fed into a separate re-ID model for appearance feature extraction.
 Method is near real-time while being almost as accurate as the SDE methods.
 
-# [Model Architecture](#contents)
-
 Architecture of the JDE is the Feature Pyramid Network (FPN).
 FPN makes predictions from multiple scales, thus bringing improvement in pedestrian detection where the scale of targets varies a lot.
 An input video frame first undergoes a forward pass through a backbone network to obtain feature maps at three scales, namely, scales with 1/32, 1/16 and 1/8 down-sampling rate, respectively.
 Then, the feature map with the smallest size (also the semantically strongest features) is up-sampled and fused with the feature map from the second smallest scale by skip connection, and the same goes for the other scales.
 Finally, prediction heads are added upon fused feature maps at all the three scales.
 A prediction head consists of several stacked convolutional layers and outputs a dense prediction map of size (6A + D) × H × W, where A is the number of anchor templates assigned to this scale, and D is the dimension of the embedding.
+
+</details>
 
 # [Dataset](#contents)
 
