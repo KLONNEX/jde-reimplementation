@@ -23,6 +23,18 @@ A prediction head consists of several stacked convolutional layers and outputs a
 </details>
 
 <details>
+<summary>Model architecture</summary>
+
+Architecture of the JDE is the Feature Pyramid Network (FPN).
+FPN makes predictions from multiple scales, thus bringing improvement in pedestrian detection where the scale of targets varies a lot.
+An input video frame first undergoes a forward pass through a backbone network to obtain feature maps at three scales, namely, scales with 1/32, 1/16 and 1/8 down-sampling rate, respectively.
+Then, the feature map with the smallest size (also the semantically strongest features) is up-sampled and fused with the feature map from the second smallest scale by skip connection, and the same goes for the other scales.
+Finally, prediction heads are added upon fused feature maps at all the three scales.
+A prediction head consists of several stacked convolutional layers and outputs a dense prediction map of size (6A + D) × H × W, where A is the number of anchor templates assigned to this scale, and D is the dimension of the embedding.
+
+</details>
+
+<details>
 <summary>Summary</summary>
 
 | Parameters                 | GPU (1p)                                                                            |
