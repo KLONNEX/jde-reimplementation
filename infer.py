@@ -1,5 +1,5 @@
 import os
-import os.path as osp
+from pathlib import Path
 
 from cfg.config import config as default_config
 from eval import eval_seq
@@ -17,7 +17,8 @@ def track(opt):
     Args:
         opt: Config parameters.
     """
-    result_root = opt.output_root if opt.output_root != '' else '.'
+    result_root = Path(opt.output_root)
+    result_name = result_root.resolve().stem
     mkdir_if_missing(result_root)
 
     dataloader = LoadVideo(
@@ -29,10 +30,10 @@ def track(opt):
 
     logger.info('Starting tracking...')
 
-    result_filename = os.path.join(result_root, 'results.txt')
+    result_filename = str(Path(result_root) / result_name / '.txt')
     frame_rate = dataloader.frame_rate
 
-    frame_dir = None if opt.output_format == 'text' else osp.join(result_root, 'frame')
+    frame_dir = None if opt.output_format == 'text' else str(result_root / 'frame')
     try:
         eval_seq(
             opt,
@@ -47,8 +48,8 @@ def track(opt):
         logger.info(e)
 
     if opt.output_format == 'video':
-        output_video_path = osp.join(result_root, 'result.mp4')
-        cmd_str = f"ffmpeg -f image2 -i {osp.join(result_root, 'frame')}/%05d.jpg -c:v copy {output_video_path}"
+        output_video_path = Path(result_root) / result_name / '.mp4'
+        cmd_str = f"ffmpeg -f image2 -i {result_root / 'frame'}/%05d.jpg -c:v copy {output_video_path}"
         os.system(cmd_str)
 
 

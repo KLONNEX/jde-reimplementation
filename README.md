@@ -119,8 +119,13 @@ To compile video from frames with predicted bounding boxes, you need to install 
 `sudo apt-get install ffmpeg`. Video compiling will happen automatically.
 
 ```bash
-python infer.py --device_id [DEVICE_ID] --ckpt_url [CKPT_URL] --input_video [INPUT_VIDEO]
+python infer.py --device_id [DEVICE_ID] --ckpt_url [CKPT_URL] --input_video [INPUT_VIDEO] --output_root [OUTPUT_ROOT]
 ```
+
+- DEVICE_ID - device ID
+- CKPT_URL - Path to the trained JDE model
+- INPUT_VIDEO - Path to the input video to be processed
+- OUTPUT_ROOT - Path to the output video folder
 
 Results of the inference will be saved into default `./results` folder, logs will be shown at command line.
 
