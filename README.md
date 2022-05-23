@@ -44,7 +44,7 @@ A prediction head consists of several stacked convolutional layers and outputs a
 
 </details>
 
-# Dataset
+## Dataset
 
 Used a large-scale training set by putting together six publicly available datasets on pedestrian detection, MOT and person search.
 
@@ -68,7 +68,7 @@ Organize your dataset structure as follows:
   └─PRW/
 ```
 
-# Training
+## Training
 
 You can follow the steps below for training and evaluation, in particular, before training,
 you need to install `requirements.txt` by following command `pip install -r requirements.txt`.
@@ -122,6 +122,6 @@ python infer.py --device_id [DEVICE_ID] --ckpt_url [CKPT_URL] --input_video [INP
 
 Results of the inference will be saved into default `./results` folder, logs will be shown at command line.
 
-# Citations
+## Citations
 
 [Paper](https://arxiv.org/pdf/1909.12605.pdf): Towards Real-Time Multi-Object Tracking. Department of Electronic Engineering, Tsinghua University
