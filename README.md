@@ -127,7 +127,7 @@ python infer.py --device_id [DEVICE_ID] --ckpt_url [CKPT_URL] --input_video [INP
 - INPUT_VIDEO - Path to the input video to be processed
 - OUTPUT_ROOT - Path to the output video folder
 
-Results of the inference will be saved into default `./results` folder, logs will be shown at command line.
+Results of the inference will be saved into chosen `OUTPUT_ROOT` folder, logs will be shown at command line.
 
 ## Citations
 
