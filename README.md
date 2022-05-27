@@ -60,7 +60,7 @@ Organize your dataset structure as follows:
 
 ```text
 .
-└─dataset_root/
+└─[DATASET_ROOT]/
   ├─Caltech/
   ├─Cityscapes/
   ├─CUHKSYSU/
@@ -83,9 +83,9 @@ All trainings will start from pre-trained backbone
 bash scripts/run_standalone_train_gpu.sh [DEVICE_ID] [LOGS_CKPT_DIR] [DATASET_ROOT] [BACKBONE_PATH]
 ```
 
-- DEVICE_ID - device ID
-- LOGS_CKPT_DIR - path to the directory, where the training results will be stored.
-- DATASET_ROOT - Path to the dataset root directory (containing all dataset parts, described in [DATASET_ZOO.md](DATASET_ZOO.md))
+- DEVICE_ID - Device ID.
+- LOGS_CKPT_DIR - Path to the directory, where the training results will be stored.
+- DATASET_ROOT - Path to the dataset root directory.
 - BACKBONE_PATH - Path to the downloaded pre-trained darknet53 checkpoint.
 
 The above command will run in the background, you can view the result through the generated standalone_train.log file.
@@ -103,9 +103,9 @@ To start tracker evaluation run the command below.
 bash scripts/run_eval_gpu.sh [DEVICE_ID] [CKPT_URL] [DATASET_ROOT]
 ```
 
-- DEVICE_ID - device ID
+- DEVICE_ID - Device ID.
 - CKPT_URL - Path to the trained JDE model
-- DATASET_ROOT - Path to the dataset root directory (containing all dataset parts, described in [DATASET_ZOO.md](DATASET_ZOO.md))
+- DATASET_ROOT - Path to the dataset root directory.
 
 > Note: the script expects that the DATASET_ROOT directory contains the MOT16 sub-folder.
 
@@ -122,10 +122,10 @@ To compile video from frames with predicted bounding boxes, you need to install 
 python infer.py --device_id [DEVICE_ID] --ckpt_url [CKPT_URL] --input_video [INPUT_VIDEO] --output_root [OUTPUT_ROOT]
 ```
 
-- DEVICE_ID - device ID
-- CKPT_URL - Path to the trained JDE model
-- INPUT_VIDEO - Path to the input video to be processed
-- OUTPUT_ROOT - Path to the output video folder
+- DEVICE_ID - Device ID.
+- CKPT_URL - Path to the trained JDE model.
+- INPUT_VIDEO - Path to the input video to be processed.
+- OUTPUT_ROOT - Path to the output video folder.
 
 Results of the inference will be saved into chosen `OUTPUT_ROOT` folder, logs will be shown at command line.
 

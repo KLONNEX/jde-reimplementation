@@ -200,7 +200,7 @@ class YOLOLayer(nn.Module):
 
         loss = loss.squeeze() * 0.5
 
-        return loss
+        return loss, lbox, lconf, lid
 
 
 class JDE(nn.Module):
@@ -267,13 +267,19 @@ class JDE(nn.Module):
         small, medium, big = self.backbone(images)
 
         # Calculate losses for each feature map
-        out_s = self.head_s(small, tconf_s, tbox_s, tid_s, self.classifier)
-        out_m = self.head_m(medium, tconf_m, tbox_m, tid_m, self.classifier)
-        out_b = self.head_b(big, tconf_b, tbox_b, tid_b, self.classifier)
+        out_s, lbox_s, lconf_s, lid_s = self.head_s(small, tconf_s, tbox_s, tid_s, self.classifier)
+        out_m, lbox_m, lconf_m, lid_m = self.head_m(medium, tconf_m, tbox_m, tid_m, self.classifier)
+        out_b, lbox_b, lconf_b, lid_b = self.head_b(big, tconf_b, tbox_b, tid_b, self.classifier)
 
         loss = (out_s + out_m + out_b) / 3
 
-        return loss
+        log_losses = {
+            'box': lbox_s + lbox_m + lbox_b,
+            'conf': lconf_s + lconf_m + lconf_b,
+            'id': lid_s + lid_m + lid_b,
+        }
+
+        return loss, log_losses
 
 
 class YOLOLayerEval(nn.Module):
@@ -453,7 +459,13 @@ def init_eval_model(cfg):
     weights_keys = list(weights.keys())[-11:]
     for key in weights_keys:
         weights.pop(key)
-    network.load_state_dict(weights)
+
+    new_weights = {}
+
+    for true_key, false_key in zip(list(network.state_dict().keys()), list(weights.keys())):
+        new_weights[true_key] = weights[false_key]
+
+    network.load_state_dict(new_weights)
     network.cuda().eval()
 
     return network

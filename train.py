@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 
 from cfg.config import config
 from src.dataset import JointDataset
+from src.log_utils import TensorBoardLog
 from src.log_utils import logger
 from src.model import init_train_model
 from src.utils import collate_fn
@@ -30,7 +31,12 @@ def main():
     Model training pipeline.
     Training starts only with the pretrained backbone (downloads automatically).
     """
+    tensorboard_dir = Path(config.logs_dir, 'tensorboard_logs')
     Path(config.logs_dir).mkdir(parents=True, exist_ok=True)
+    tensorboard_dir.mkdir(parents=True, exist_ok=True)
+
+    # Initialize summary writer for tensorboard
+    tb_logger = TensorBoardLog(str(tensorboard_dir))
 
     with Path(config.data_cfg_url).open('r') as file:
         data_paths = json.load(file)['train']
@@ -69,7 +75,7 @@ def main():
                 for param_lr in optimizer.param_groups:
                     param_lr['lr'] = learning_rate
 
-            loss = model(*batch)
+            loss, log_loss = model(*batch)
 
             loss.backward()
 
@@ -87,6 +93,9 @@ def main():
                 running_loss = []
             else:
                 running_loss.append(loss.detach().cpu().numpy())
+
+            global_step = (epoch - 1) * len(dataloader) + step
+            tb_logger.update(global_step, log_loss, optimizer)
 
         log = f'{epoch} epoch time {(time.time() - epoch_start) // 60} minutes'
         logger.info(log)
