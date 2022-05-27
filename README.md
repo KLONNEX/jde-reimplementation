@@ -93,6 +93,12 @@ After training, you can get the training loss and time logs in chosen logs_dir.
 
 The model checkpoints will be saved in LOGS_CKPT_DIR directory.
 
+> Training metrics you can see in real-time by running command at command line
+> `tensorboard --logdir [LOGS_CKPT_DIR] --port [PORT] (optinal)`
+
+- LOGS_CKPT_DIR - Same to the chosen dir while start training.
+- PORT - localhost port to connect tensorboard.
+
 ## Evaluation
 
 Tracking ability of the model is tested on the train part of the MOT16 dataset (doesn't use during training).

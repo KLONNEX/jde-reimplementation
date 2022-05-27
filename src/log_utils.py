@@ -6,13 +6,13 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 class TensorBoardLog:
-    def __init__(self, log_dir):
-        """
-        Tensorboard logger for training metric visualization.
+    """
+    Tensorboard logger for metric visualization.
 
-        Args:
-            log_dir: Logging directory for tensorboard.
-        """
+    Args:
+        log_dir: Logging directory for tensorboard.
+    """
+    def __init__(self, log_dir):
         self.tb_logger = SummaryWriter(log_dir=log_dir, comment='Training writer.')
 
     def update(self, curr_step, log_dict, optimizer):
